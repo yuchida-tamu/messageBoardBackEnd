@@ -4,6 +4,8 @@ const express = require("express");
 //routers
 const messages = require("./apis/messages");
 const users = require("./apis/users");
+const friends = require("./apis/friends");
+
 const bodyParser = require("body-parser");
 //db
 const mongoose = require("mongoose");
@@ -33,6 +35,8 @@ app.get("/", (req, res) => {
 app.use("/api/v1/messages", messages);
 //Routing for user(s) api
 app.use("/api/v1/users", users);
+//Routing for friend(s) api
+app.use("/api/v1/friends", friends);
 
 //listen at port 3000 if it couldn't find the environment var
 app.listen(process.env.PORT || 3030, () => {

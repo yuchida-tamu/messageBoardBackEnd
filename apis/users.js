@@ -46,15 +46,18 @@ router
       return res.json({ error: "Invalid id" });
     next();
   })
+  //fetch an user by id
   .get(async (req, res, next) => {
     const { id } = req.params;
     User.findById(id, (err, user) => {
       if (err) {
+        //if failed, returns json with error property
         res.json({ error: "No matching id" });
       }
       res.json({ method: "GET", user: user });
     });
   })
+  //update an user found by id
   .put((req, res, next) => {
     const { id } = req.params;
     const user = {
@@ -75,19 +78,19 @@ router
       res.json({ method: "PUT", user: updated });
     });
   })
+  //deleted an user by id
   .delete((req, res, next) => {
     const { id } = req.params;
 
-    User.findByIdAndRemove(id, (user) => {
-      console.log("Successfully deleted!", user);
+    User.findByIdAndRemove(id, (err, user) => {
+      if (err) return res.json({ error: "Coudn't delete" });
+      //return an user just removed from the collection
+      res.json({ method: "DELETE", user: user });
     });
   });
 
 router.route("/:id/messages").get((req, res, next) => {
   const { id } = req.params;
-  res.json({ method: "GET" });
-});
-router.route("/:id/friends").get((req, res, next) => {
   res.json({ method: "GET" });
 });
 
