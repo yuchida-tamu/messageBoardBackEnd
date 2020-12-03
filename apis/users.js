@@ -40,6 +40,13 @@ router
 
 router
   .route("/:id")
+  .all((req, res, next) => {
+    const { id } = req.params;
+    //if id is not valid form, abort
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.json({ error: "Invalid id" });
+    }
+  })
   .get(async (req, res, next) => {
     const { id } = req.params;
     User.findById(id, (err, user) => {
@@ -56,10 +63,6 @@ router
   })
   .delete((req, res, next) => {
     const { id } = req.params;
-    //if id is not valid form, abort
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.json({ error: "Invalid id" });
-    }
 
     User.findByIdAndRemove(id, (user) => {
       console.log("Successfully deleted!", user);
