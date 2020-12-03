@@ -40,8 +40,14 @@ router
 
 router
   .route("/:id")
-  .get((req, res, next) => {
-    res.json({ method: "GET" });
+  .get(async (req, res, next) => {
+    const { id } = req.params;
+    User.findById(id, (err, user) => {
+      if (err) {
+        res.json({ error: "No matching id" });
+      }
+      res.json({ method: "GET", user: user });
+    });
   })
   .put((req, res, next) => {
     const { id } = req.params;
@@ -50,7 +56,14 @@ router
   })
   .delete((req, res, next) => {
     const { id } = req.params;
-    res.json({ method: "DELETE", id: id });
+    //if id is not valid form, abort
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.json({ error: "Invalid id" });
+    }
+
+    User.findByIdAndRemove(id, (user) => {
+      console.log("Successfully deleted", user);
+    });
   });
 
 router.route("/:id/messages").get((req, res, next) => {
