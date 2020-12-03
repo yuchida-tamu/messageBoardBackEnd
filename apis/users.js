@@ -62,7 +62,7 @@ router
     }
 
     User.findByIdAndRemove(id, (user) => {
-      console.log("Successfully deleted", user);
+      console.log("Successfully deleted!", user);
     });
   });
 
