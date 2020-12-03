@@ -41,11 +41,10 @@ router
 router
   .route("/:id")
   .all((req, res, next) => {
-    const { id } = req.params;
     //if id is not valid form, abort
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
       return res.json({ error: "Invalid id" });
-    }
+    next();
   })
   .get(async (req, res, next) => {
     const { id } = req.params;
@@ -58,8 +57,23 @@ router
   })
   .put((req, res, next) => {
     const { id } = req.params;
-    const user = req.body;
-    res.json({ method: "PUT", id: id, user: user });
+    const user = {
+      name: req.body.name,
+      iconURI: req.body.iconURI,
+      friendsID: req.body.friendsID,
+    };
+
+    //update options
+    const options = {
+      new: true,
+    };
+
+    User.findByIdAndUpdate(id, user, options, (err, updated) => {
+      //if the process fails, return json with error property
+      if (err) return res.json({ error: "Update failed" });
+      //return the updated version of the user
+      res.json({ method: "PUT", user: updated });
+    });
   })
   .delete((req, res, next) => {
     const { id } = req.params;
