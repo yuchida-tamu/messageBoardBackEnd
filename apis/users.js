@@ -1,13 +1,40 @@
 const express = require("express");
 const router = express.Router();
 
+const mongoose = require("mongoose");
+
+//Create User Schema for MongoDB
+const userSchema = new mongoose.Schema({
+  name: String,
+  iconURI: String,
+  friendsID: String,
+});
+//Create User Model based on User Schema
+const User = mongoose.model("User", userSchema);
+
 router
   .route("/")
-  .get((req, res, next) => {
-    res.json({ method: "GET" });
+  .get(async (req, res, next) => {
+    users = await User.find({});
+    res.json({ users: users });
   })
-  .post((req, res, next) => {
-    const user = req.body;
+  .post(async (req, res, next) => {
+    const data = req.body;
+    //Check if the record already exists (username(name) has to be unique)
+    if (await User.findOne({ name: data.name }).exec()) {
+      return res.json({ error: "User already exists" });
+    }
+    //Create an user based on a post request
+    const user = new User({
+      name: data.name,
+      iconURI: data.iconURL,
+      friendsID: data.friendsID,
+    });
+
+    user.save((err, user) => {
+      if (err) return console.log(err);
+    });
+
     res.json({ method: "POST", user: user });
   });
 

@@ -15,7 +15,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
-//If the connection is established, the even "open" will trigger this handler once
+//If the connection is established, the even "open" will trigger this handler oncegit
 db.once("open", () => {
   console.log("DB connected!!!");
 });

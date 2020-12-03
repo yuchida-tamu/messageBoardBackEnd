@@ -1,6 +1,15 @@
 const express = require("express");
-
 const router = express.Router();
+const mongoose = require("mongoose");
+
+//Create Message Schema for MongoDB
+const messageSchema = new mongoose.Schema({
+  content: String,
+  date: { type: Date, default: Date.now },
+  authorID: String,
+});
+//Create Message Model based on Message Scheme
+const Message = mongoose.model("Message", messageSchema);
 
 router
   .route("/")
