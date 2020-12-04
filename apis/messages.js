@@ -34,40 +34,87 @@ router
       if (message) {
         message.save((err, msg) => {
           if (err)
-            return res.json({ error: "Couldn't save the message properly" });
+            return res.json({
+              error: err,
+              message: "Couldn't save the message properly",
+            });
           return res.json({ status: "Message created!!", message: msg });
         });
       }
     } catch (err) {
       //Catch if the inputs are invalid
-      res.json({ error: err.errors.message });
+      res.json({ message: "invalid input", error: err.errors.message });
     }
   });
 
 //API for a specific message
 router
   .route("/:id")
+  .all((req, res, next) => {
+    //make sure the :id param has a valid value(i.e objectID for mongoDB)
+    //if id is not valid, abort
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
+      return res.json({ error: "Invalid id" });
+    //if the param is valid, go on to next
+    next();
+  })
   //Get message
   .get((req, res, next) => {
     //Deconstruct the req.params object
     //Store the query param(:id) to id
     const { id } = req.params;
-    res.json({ method: "GET", id: id });
+    //Fetch msg by id from mongoDB
+    Message.findById(id, (err, msg) => {
+      console.log("inside findbyID", id);
+      if (err || !msg) {
+        return res.json({
+          error: err,
+          message: msg,
+          status: "Couldn't retrieve the message properly",
+        });
+      }
+      return res.json({ status: "Message found!", message: msg });
+    });
   })
   //Update message
   .put((req, res, next) => {
     //Deconstruct the req.params object
     //Store the query param(:id) to id
     const { id } = req.params;
-    const message = req.body;
-    res.json({ method: "PUT", content: message });
+    //Define the update options
+    const options = {
+      new: true,
+    };
+    //Validate Input
+    const { content, date, authorID, recipientID } = req.body;
+    if (!content) return res.json({ error: "content is required" });
+    if (!authorID) return res.json({ error: "autherID is required" });
+    if (!recipientID) return res.json({ error: "recipientID is required" });
+
+    const updatedMessage = {
+      content: content,
+      date: date,
+      autherID: authorID,
+      recipientID: recipientID,
+    };
+    //update the target message by using the request body
+    Message.findByIdAndUpdate(id, updatedMessage, options, (err, msg) => {
+      //If error occurs, send an error message
+      if (err)
+        return res.json({ error: err, message: "Couldn't update the message" });
+      return res.json({ status: "message updated", message: msg });
+    });
   })
   //Delete message
   .delete((req, res, next) => {
     //Deconstruct the req.params object
     //Store the query param(:id) to id
     const { id } = req.params;
-    res.json({ method: "DELETE", id: id });
+    Message.findByIdAndRemove(id, (err, msg) => {
+      if (err)
+        return res.json({ error: err, message: "Couldn't delete the message" });
+      return res.json({ status: "message deleted", deletedMessage: msg });
+    });
   });
 
 //API for User specific message
@@ -77,7 +124,7 @@ router
     //make sure the userID param has a valid value(i.e objectID for mongoDB)
     //if id is not valid form, abort
     if (!mongoose.Types.ObjectId.isValid(req.params.id))
-      return res.json({ error: "Invalid id" });
+      return res.json({ error: "Invalid userID" });
     //if the param is valid, go on to next
     next();
   })
