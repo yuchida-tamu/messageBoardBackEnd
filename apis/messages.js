@@ -22,6 +22,9 @@ router
   //Create a new message
   .post((req, res, next) => {
     const data = req.body;
+    //autherID and recipientID has to be valid MongoDB id format
+    if (!mongoose.Types.ObjectId.isValid(authorID)) return;
+    if (!mongoose.Types.ObjectId.isValid(recipientID)) return;
     //validate the input, and Try to create a Message instance
     try {
       const message = new Message({
@@ -119,7 +122,7 @@ router
 
 //API for User specific message
 router
-  .route("/:userID")
+  .route("/list/:userID")
   .all((req, res, next) => {
     //make sure the userID param has a valid value(i.e objectID for mongoDB)
     //if id is not valid form, abort
@@ -129,9 +132,13 @@ router
     next();
   })
   //Get messages that belong to an user with the requested ID
-  .get((req, res, next) => {
+  .get(async (req, res, next) => {
     const { userID } = req.params;
     //Fetch messages by the userID
+    const messages = await Message.find({ authorID: userID });
+    if (!messages || messages === [])
+      return res.json({ status: "message not found", messages: messages });
+    return res.json({ status: "messages found", messages: messages });
   });
 
 module.exports = router;
