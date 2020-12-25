@@ -2,15 +2,8 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 
-//Create Message Schema for MongoDB
-const messageSchema = new mongoose.Schema({
-  content: { type: String, required: [true, "Content is required"] },
-  date: { type: Date, default: Date.now },
-  authorID: { type: String, required: [true, "authorID is required"] },
-  recipientID: { type: String, required: [true, "recipientID is required"] },
-});
-//Create Message Model based on Message Scheme
-const Message = mongoose.model("Message", messageSchema);
+//Import Message model
+const Message = require("../models/message");
 
 router
   .route("/")
@@ -23,8 +16,16 @@ router
   .post((req, res, next) => {
     const data = req.body;
     //autherID and recipientID has to be valid MongoDB id format
-    if (!mongoose.Types.ObjectId.isValid(authorID)) return;
-    if (!mongoose.Types.ObjectId.isValid(recipientID)) return;
+    if (!mongoose.Types.ObjectId.isValid(data.authorID))
+      return res.json({
+        message: "invalid authorID",
+        error: err.errors.message,
+      });
+    if (!mongoose.Types.ObjectId.isValid(data.recipientID))
+      return res.json({
+        message: "invalid recipientID",
+        error: err.errors.message,
+      });
     //validate the input, and Try to create a Message instance
     try {
       const message = new Message({

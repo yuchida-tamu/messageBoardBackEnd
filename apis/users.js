@@ -1,17 +1,9 @@
 const express = require("express");
 const router = express.Router();
-
 const mongoose = require("mongoose");
 
-//Create User Schema for MongoDB
-const userSchema = new mongoose.Schema({
-  name: String,
-  iconURI: String,
-  friendsID: String,
-});
-//Create User Model based on User Schema
-const User = mongoose.model("User", userSchema);
-
+//import User model
+const User = require("../models/user");
 router
   .route("/")
   .get(async (req, res, next) => {
@@ -49,7 +41,7 @@ router
   //fetch an user by id
   .get(async (req, res, next) => {
     const { id } = req.params;
-    User.findById(id, (err, user) => {
+    await User.findById(id, (err, user) => {
       if (err) {
         //if failed, returns json with error property
         res.json({ error: "No matching id" });
@@ -58,34 +50,40 @@ router
     });
   })
   //update an user found by id
-  .put((req, res, next) => {
+  .put(async (req, res, next) => {
     const { id } = req.params;
-    const user = {
-      name: req.body.name,
-      iconURI: req.body.iconURI,
-      friendsID: req.body.friendsID,
+    const { name, iconURI, friendsID } = req.body;
+    const newUser = {
+      name: name,
+      iconURI: iconURI,
+      friendsID: friendsID,
     };
 
+    //replace user that is attached to request
+    if (req.user) {
+      req.user = newUser;
+    }
     //update options
     const options = {
       new: true,
     };
 
-    User.findByIdAndUpdate(id, user, options, (err, updated) => {
+    await User.findByIdAndUpdate(id, newUser, options, (err, updated) => {
       //if the process fails, return json with error property
       if (err) return res.json({ error: "Update failed" });
       //return the updated version of the user
-      res.json({ method: "PUT", user: updated });
+      return res.json({ method: "PUT", user: updated });
     });
   })
-  //deleted an user by id
+  //deleted an user by id (by admin or by user cancelling their own account)
   .delete((req, res, next) => {
     const { id } = req.params;
 
     User.findByIdAndRemove(id, (err, user) => {
       if (err) return res.json({ error: "Coudn't delete" });
-      //return an user just removed from the collection
-      res.json({ method: "DELETE", user: user });
+
+      //redirect to logout to clear cookie
+      res.redirect("http://localhost3030/auth/logout"); //TODO: use Env or Replace with the url for production use
     });
   });
 
